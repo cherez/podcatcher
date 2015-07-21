@@ -85,5 +85,3 @@ if __name__ == '__main__':
     threads = [CatcherThread() for i in range(config.get('threads', 1))]
     for thread in threads:
         thread.start()
-    for thread in threads:
-        thread.join()
