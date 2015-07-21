@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+import requests
+from xml.dom.minidom import parseString
+import os, os.path
+from urllib.parse import unquote, urlparse
+import sys
+import yaml
+
+class Podcast:
+    def __init__(self, url, path):
+        self.url = url
+        self.path = path
+
+    def download(self):
+        print("Downloading {}".format(self.url))
+        os.makedirs(self.path, exist_ok=True)
+        r = requests.get(self.url)
+        dom = parseString(r.text)
+        enclosures = dom.getElementsByTagName('enclosure')
+        files = []
+        for i in enclosures:
+            attributes = {j: i.attributes[j].value for j in i.attributes.keys()}
+            files.append(File(self, attributes))
+        files = reversed(files)
+        for i in files:
+            if i.downloaded(): #skip any files we already have
+                continue
+            i.download()
+
+
+class File:
+    def __init__(self, podcast, attributes):
+        self.podcast = podcast
+        self.attributes = attributes
+        self.url = attributes['url']
+        filename = os.path.split(urlparse(self.url).path)[1]
+        filename = unquote(filename)
+        self.path = os.path.join(podcast.path, filename)
+        if 'length' in attributes:
+            self.length = int(attributes['length'])
+        else:
+            length = None
+
+    def downloaded(self):
+        return os.path.exists(self.path)
+
+    def download(self):
+        print("Downloading {} from {}".format(self.path, self.url))
+        request = requests.get(self.url)
+        open(self.path, 'wb').write(request.content)
+
+if __name__ == '__main__':
+    home = os.path.expanduser("~")
+    os.chdir(os.path.join(home, "podcasts"))
+    try:
+        config = yaml.load(open('podcasts.yaml'))
+    except:
+        sys.stderr.write("Failed to load config file")
+        sys.exit(1)
+    podcasts = []
+    for i in config:
+        if 'path' not in i or 'url' not in i:
+            sys.stderr.write("Bad podcast defined in podcasts.yaml: {}".format(i))
+            continue
+        podcasts.append(Podcast(i['url'], i['path']))
+
+    for i in podcasts:
+        i.download()
