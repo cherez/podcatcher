@@ -1,11 +1,25 @@
 #!/usr/bin/env python3
 
+from queue import Queue, Empty
 import requests
 from xml.dom.minidom import parseString
 import os, os.path
 from urllib.parse import unquote, urlparse
 import sys
+from threading import Thread
 import yaml
+
+podcast_queue = Queue()
+
+class CatcherThread(Thread):
+    def run(self):
+        while True:
+            try:
+                cast = podcast_queue.get(False)
+            except Empty:
+                #close when we're out of casts
+                return
+            cast.download()
 
 class Podcast:
     def __init__(self, url, path):
@@ -59,11 +73,17 @@ if __name__ == '__main__':
         sys.stderr.write("Failed to load config file")
         sys.exit(1)
     podcasts = []
-    for i in config:
+    for i in config['podcasts']:
         if 'path' not in i or 'url' not in i:
             sys.stderr.write("Bad podcast defined in podcasts.yaml: {}".format(i))
             continue
         podcasts.append(Podcast(i['url'], i['path']))
 
     for i in podcasts:
-        i.download()
+        podcast_queue.put(i)
+
+    threads = [CatcherThread() for i in range(config.get('threads', 1))]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()

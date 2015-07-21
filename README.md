@@ -9,12 +9,14 @@ Podcatcher only requires `requests` and `PyYAML` which can be installed with pip
 Create a directory named `podcasts` in your home directory, and put a YAML file named `podcasts.yaml` in it.
 It should look something like:
 ```yaml
--
-  url: 'https://feeds.feedburner.com/dancarlin/history'
-  path: 'Hardcore History'
--
-  url: 'http://feed.thisamericanlife.org/talpodcast'
-  path: 'This American Life'
+podcasts:
+    -
+        url: 'https://feeds.feedburner.com/dancarlin/history'
+        path: 'Hardcore History'
+    -
+        url: 'http://feed.thisamericanlife.org/talpodcast'
+        path: 'This American Life'
+threads: 2 #number of podcasts to fetch at a time
 ```
 
 Paths are either relative to the podcasts directory or absolute absolute.
