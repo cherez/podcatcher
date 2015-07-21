@@ -16,3 +16,7 @@ It should look something like:
   url: 'http://feed.thisamericanlife.org/talpodcast'
   path: 'This American Life'
 ```
+
+Paths are either relative to the podcasts directory or absolute absolute.
+
+Then run `catcher` and the paths should be filled with the files from the podcasts.
