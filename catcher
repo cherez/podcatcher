@@ -40,17 +40,21 @@ class Podcast:
         dom = parseString(r.text)
         enclosures = dom.getElementsByTagName('enclosure')
         files = []
-        for i in enclosures:
+        for index, i in enumerate(reversed(enclosures)):
             attributes = {j: i.attributes[j].value for j in i.attributes.keys()}
             item = i.parentNode
+            try:
+                attributes['title'] = item.getElementsByTagName('title')[0].firstChild.nodeValue
+            except:
+               pass #ignore if it lacks a title
             if date_parser:
                 try:
                     time = item.getElementsByTagName('pubDate')[0].firstChild.nodeValue
                     attributes['time'] = dateutil.parser.parse(time).timestamp()
                 except:
                     pass #ignore if it lacks a time
+            attributes['index'] = index+1
             files.append(File(self, attributes))
-        files = reversed(files)
         for i in files:
             if i.downloaded(): #skip any files we already have
                 continue
@@ -64,7 +68,14 @@ class File:
         self.url = attributes['url']
         filename = os.path.split(urlparse(self.url).path)[1]
         filename = unquote(filename)
-        self.path = os.path.join(podcast.path, filename)
+        filename, ext = os.path.splitext(filename)
+        try:
+            filename = podcast.format.format(filename = filename,
+                    title=attributes['title'],
+                    index = attributes['index'])
+        except:
+            pass #don't worry if the podcast lacks a format or we're missing necessary attributes
+        self.path = os.path.join(podcast.path, filename + ext)
         self.time = attributes.get('time', None)
 
     def downloaded(self):
@@ -90,7 +101,12 @@ if __name__ == '__main__':
         if 'path' not in i or 'url' not in i:
             sys.stderr.write("Bad podcast defined in podcasts.yaml: {}".format(i))
             continue
-        podcasts.append(Podcast(i['url'], i['path']))
+        podcast = Podcast(i['url'], i['path'])
+        if 'format' in i:
+            podcast.format = i['format']
+        elif 'format' in config:
+            podcast.format = config['format']
+        podcasts.append(podcast)
 
     for i in podcasts:
         podcast_queue.put(i)

@@ -16,9 +16,14 @@ podcasts:
     -
         url: 'https://feeds.feedburner.com/dancarlin/history'
         path: 'Hardcore History'
+        format: "{title}" #replace the ugly filenames with the title
     -
         url: 'http://feed.thisamericanlife.org/talpodcast'
         path: 'This American Life'
+    -
+        url: 'http://feeds.feedburner.com/SlateLexiconValley'
+        path: 'Lexicon Valley'
+        format: "{index:03} - {title}" #prepend the index so alphabetic sorting gets the right format
 threads: 2 #number of podcasts to fetch at a time
 ```
 
