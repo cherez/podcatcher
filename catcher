@@ -75,6 +75,11 @@ class File:
                     index = attributes['index'])
         except:
             pass #don't worry if the podcast lacks a format or we're missing necessary attributes
+        #remove any filename characters we probably don't want to throw at a filesystem
+        filename = filename.replace('/', '').replace('\\', ''). \
+                replace('\r', '').replace('\n', ''). \
+                replace('\x00', ''). \
+                replace(':', " - ") #you're welcome, Windows.
         self.path = os.path.join(podcast.path, filename + ext)
         self.time = attributes.get('time', None)
 
