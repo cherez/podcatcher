@@ -9,6 +9,13 @@ import sys
 from threading import Thread
 import yaml
 
+#we don't have to be able to parse dates
+try:
+    import dateutil.parser
+    date_parser = True
+except:
+    date_parser = False
+
 podcast_queue = Queue()
 
 class CatcherThread(Thread):
@@ -35,6 +42,13 @@ class Podcast:
         files = []
         for i in enclosures:
             attributes = {j: i.attributes[j].value for j in i.attributes.keys()}
+            item = i.parentNode
+            if date_parser:
+                try:
+                    time = item.getElementsByTagName('pubDate')[0].firstChild.nodeValue
+                    attributes['time'] = dateutil.parser.parse(time).timestamp()
+                except:
+                    pass #ignore if it lacks a time
             files.append(File(self, attributes))
         files = reversed(files)
         for i in files:
@@ -51,6 +65,7 @@ class File:
         filename = os.path.split(urlparse(self.url).path)[1]
         filename = unquote(filename)
         self.path = os.path.join(podcast.path, filename)
+        self.time = attributes.get('time', None)
 
     def downloaded(self):
         return os.path.exists(self.path)
@@ -59,6 +74,8 @@ class File:
         print("Downloading {} from {}".format(self.path, self.url))
         request = requests.get(self.url)
         open(self.path, 'wb').write(request.content)
+        if self.time:
+            os.utime(self.path, (self.time, self.time))
 
 if __name__ == '__main__':
     home = os.path.expanduser("~")
