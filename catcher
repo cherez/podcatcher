@@ -37,6 +37,7 @@ class Podcast:
         print("Downloading {}".format(self.url))
         os.makedirs(self.path, exist_ok=True)
         r = requests.get(self.url)
+        r.encoding = 'utf-8' #requests tends to assume 8859-1 for some reason
         dom = parseString(r.text)
         enclosures = dom.getElementsByTagName('enclosure')
         files = []
