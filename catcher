@@ -29,6 +29,7 @@ class CatcherThread(Thread):
             cast.download()
 
 class Podcast:
+    playlist = None
     def __init__(self, url, path):
         self.url = url
         self.path = path
@@ -61,6 +62,20 @@ class Podcast:
                 continue
             i.download()
 
+        if self.playlist:
+            playlist_path = os.path.join(self.path, self.playlist)
+            lines = []
+            try:
+                lines = open(playlist_path).readlines()
+            except IOError:
+                pass #playlist does not exist
+            playlist_file = open(playlist_path, 'a')
+
+            for file in files:
+                if file.filename not in lines:
+                    playlist_file.write(file.filename + '\n')
+
+
 
 class File:
     def __init__(self, podcast, attributes):
@@ -82,7 +97,8 @@ class File:
                 replace('\r', '').replace('\n', ''). \
                 replace('\x00', ''). \
                 replace(':', " - ") #you're welcome, Windows.
-        self.path = os.path.join(podcast.path, filename + ext)
+        self.filename = filename + ext
+        self.path = os.path.join(podcast.path, self.filename)
         self.time = attributes.get('time', None)
 
     def downloaded(self):
@@ -113,6 +129,10 @@ if __name__ == '__main__':
             podcast.format = i['format']
         elif 'format' in config:
             podcast.format = config['format']
+        if 'playlist' in i:
+            podcast.playlist = i['playlist']
+        elif 'playlist' in config:
+            podcast.playlist = config['playlist']
         podcasts.append(podcast)
 
     for i in podcasts:
