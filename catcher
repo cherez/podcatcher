@@ -66,7 +66,7 @@ class Podcast:
             playlist_path = os.path.join(self.path, self.playlist)
             lines = []
             try:
-                lines = open(playlist_path).readlines()
+                lines = {i.strip() for i in open(playlist_path).readlines()}
             except IOError:
                 pass #playlist does not exist
             playlist_file = open(playlist_path, 'a')
