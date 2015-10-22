@@ -25,6 +25,7 @@ podcasts:
         format: "{index:03} - {title}" #prepend the index so alphabetic sorting gets the right format
 format: "{title}" #replace the ugly filenames with the title
 threads: 2 #number of podcasts to fetch at a time
+playlist: 'playlist.m3u' #create an m3u playlist in each podcast directory
 ```
 
 Paths are either relative to the podcasts directory or absolute.
